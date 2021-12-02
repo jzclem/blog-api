@@ -4,8 +4,8 @@ var router = express.Router();
 var db = require('../config/mysql');
 
 /**
- * @api {post} /article/add 添加新的文章
- * @apiName AddArticle
+ * @api {post} /article/release 添加新的文章
+ * @apiName ReleaseArticle
  * @apiGroup Article
  *
  * @apiParam { Number } cate_1st 一级分类id.
@@ -15,45 +15,44 @@ var db = require('../config/mysql');
  * @apiParam { String } main_photo 文章主图.
  * @apiParam { String } content 文章内容.
  *
- * @apiSampleRequest /article/add
+ * @apiSampleRequest /article/release
  */
 
-router.post("/add/", async (req, res) => {
-	let { cate_1st, cate_2nd, title, description, content, main_photo } = req.body;
-	var sql =
-		'INSERT INTO article (cate_1st ,cate_2nd , title , description , content , create_date , main_photo ) VALUES (?, ? , ? , ?, ?, CURRENT_TIMESTAMP() , ?)';
-	let { insertId, affectedRows } = await db.query(sql, [cate_1st, cate_2nd, title, description, content, main_photo]);
-	if (!affectedRows) {
-		res.json({
-			status: false,
-			msg: "添加失败！"
-		});
-		return;
-	}
-	res.json({
-		status: true,
-		msg: "添加成功"
-	});
+router.post("/release/", async (req, res) => {
+    let { cate_1st, cate_2nd, title, description, content, main_photo } = req.body;
+    var sql = 'INSERT INTO article (cate_1st ,cate_2nd , title , description , content , create_date , main_photo ) VALUES (?, ? , ? , ?, ?, CURRENT_TIMESTAMP() , ?)';
+    let { insertId, affectedRows } = await db.query(sql, [cate_1st, cate_2nd, title, description, content, main_photo]);
+    if (!affectedRows) {
+        res.json({
+            status: false,
+            msg: "添加失败！"
+        });
+        return;
+    }
+    res.json({
+        status: true,
+        msg: "添加成功"
+    });
 });
 
 /**
- * @api {post} /article/delete 删除指定id的文章
- * @apiName DeleteArticle
+ * @api {post} /article/remove 删除指定id的文章
+ * @apiName RemoveArticle
  * @apiGroup Article
  *
  * @apiParam { Number } id 文章id
  *
- * @apiSampleRequest /article/delete
+ * @apiSampleRequest /article/remove
  */
 
-router.post('/delete', async (req, res) => {
-	let { id } = req.body;
-	var sql = 'DELETE FROM article WHERE id = ?';
-	let results = await db.query(sql, [id]);
-	res.json({
-		status: true,
-		msg: "删除成功"
-	});
+router.post('/remove', async (req, res) => {
+    let { id } = req.body;
+    var sql = 'DELETE FROM article WHERE id = ?';
+    let results = await db.query(sql, [id]);
+    res.json({
+        status: true,
+        msg: "删除成功"
+    });
 });
 
 /**
@@ -66,14 +65,14 @@ router.post('/delete', async (req, res) => {
  * @apiSampleRequest /article/detail
  */
 router.get('/detail', async (req, res) => {
-	let { id } = req.query;
-	var sql = 'SELECT * FROM article WHERE id = ?';
-	let results = await db.query(sql, [id]);
-	res.json({
-		status: true,
-		msg: "获取成功",
-		data: results[0]
-	});
+    let { id } = req.query;
+    var sql = 'SELECT * FROM article WHERE id = ?';
+    let results = await db.query(sql, [id]);
+    res.json({
+        status: true,
+        msg: "获取成功",
+        data: results[0]
+    });
 });
 
 /**
@@ -92,21 +91,20 @@ router.get('/detail', async (req, res) => {
  * @apiSampleRequest /article/edit
  */
 router.post('/edit', async (req, res) => {
-	let { id, cate_1st, cate_2nd, title, description, content, main_photo } = req.body;
-	var sql =
-		'UPDATE article SET cate_1st = ? , cate_2nd = ? , title = ? , description = ? , content = ? , main_photo = ? WHERE id = ?';
-	let { affectedRows } = await db.query(sql, [cate_1st, cate_2nd, title, description, content, main_photo, id]);
-	if (!affectedRows) {
-		res.json({
-			status: false,
-			msg: "修改失败！"
-		});
-		return;
-	}
-	res.json({
-		status: true,
-		msg: "修改成功！"
-	});
+    let { id, cate_1st, cate_2nd, title, description, content, main_photo } = req.body;
+    var sql = 'UPDATE article SET cate_1st = ? , cate_2nd = ? , title = ? , description = ? , content = ? , main_photo = ? WHERE id = ?';
+    let { affectedRows } = await db.query(sql, [cate_1st, cate_2nd, title, description, content, main_photo, id]);
+    if (!affectedRows) {
+        res.json({
+            status: false,
+            msg: "修改失败！"
+        });
+        return;
+    }
+    res.json({
+        status: true,
+        msg: "修改成功！"
+    });
 });
 // 获取所有文章列表,默认按照日期降序排序，分页 pagesize(一页数量) pageindex(第几页)
 /**
@@ -128,22 +126,21 @@ router.post('/edit', async (req, res) => {
  *
  * @apiSuccess {Object[]} data 文章数组.
  * @apiSuccess {Number} total 文章总数.
- * 
+ *
  * @apiSampleRequest /article/list
  */
 router.get("/list", async (req, res) => {
-	let { pagesize, pageindex } = req.query;
-	pagesize = parseInt(pagesize);
-	var offset = pagesize * (pageindex - 1);
-	var sql =
-		'SELECT a.id, cate_1st, cate_2nd, title, description, main_photo, DATE_FORMAT(create_date,"%Y-%m-%d %T") AS create_time , DATE_FORMAT(update_date,"%Y-%m-%d %T") AS update_time, c1.`name` AS cate_1st_name, c2.`name` AS cate_2nd_name FROM `article` a JOIN category c1 ON a.cate_1st = c1.id JOIN category c2 ON a.cate_2nd = c2.id ORDER BY create_date DESC, update_date DESC LIMIT ? OFFSET ?;SELECT FOUND_ROWS() as total';
-	let results = await db.query(sql, [pagesize, offset]);
-	res.json({
-		status: true,
-		msg: "获取成功",
-		...results[1][0],
-		data: results[0],
-	});
+    let { pagesize, pageindex } = req.query;
+    pagesize = parseInt(pagesize);
+    var offset = pagesize * (pageindex - 1);
+    var sql = 'SELECT a.id, cate_1st, cate_2nd, title, description, main_photo, DATE_FORMAT(create_date,"%Y-%m-%d %T") AS create_time , DATE_FORMAT(update_date,"%Y-%m-%d %T") AS update_time, c1.`name` AS cate_1st_name, c2.`name` AS cate_2nd_name FROM `article` a JOIN category c1 ON a.cate_1st = c1.id JOIN category c2 ON a.cate_2nd = c2.id ORDER BY create_date DESC, update_date DESC LIMIT ? OFFSET ?;SELECT FOUND_ROWS() as total';
+    let results = await db.query(sql, [pagesize, offset]);
+    res.json({
+        status: true,
+        msg: "获取成功",
+        ...results[1][0],
+        data: results[0],
+    });
 });
 
 /**
@@ -160,18 +157,17 @@ router.get("/list", async (req, res) => {
  */
 
 router.get("/category", async (req, res) => {
-	let { pagesize, pageindex, id } = req.query;
-	pagesize = parseInt(pagesize);
-	let offset = pagesize * (pageindex - 1);
-	var sql =
-		'SELECT a.id, cate_1st, cate_2nd, title, description, main_photo, DATE_FORMAT(create_date,"%Y-%m-%d %T") AS create_time , DATE_FORMAT(update_date,"%Y-%m-%d %T") AS update_time, c1.`name` AS cate_1st_name, c2.`name` AS cate_2nd_name FROM `article` a JOIN category c1 ON a.cate_1st = c1.id JOIN category c2 ON a.cate_2nd = c2.id WHERE a.cate_1st = ? ORDER BY create_date DESC, update_date DESC LIMIT ? OFFSET ? ; SELECT FOUND_ROWS() as total';
-	let results = await db.query(sql, [id, pagesize, offset]);
-	res.json({
-		status: true,
-		msg: "获取成功",
-		...results[1][0],
-		data: results[0]
-	});
+    let { pagesize, pageindex, id } = req.query;
+    pagesize = parseInt(pagesize);
+    let offset = pagesize * (pageindex - 1);
+    var sql = 'SELECT a.id, cate_1st, cate_2nd, title, description, main_photo, DATE_FORMAT(create_date,"%Y-%m-%d %T") AS create_time , DATE_FORMAT(update_date,"%Y-%m-%d %T") AS update_time, c1.`name` AS cate_1st_name, c2.`name` AS cate_2nd_name FROM `article` a JOIN category c1 ON a.cate_1st = c1.id JOIN category c2 ON a.cate_2nd = c2.id WHERE a.cate_1st = ? ORDER BY create_date DESC, update_date DESC LIMIT ? OFFSET ? ; SELECT FOUND_ROWS() as total';
+    let results = await db.query(sql, [id, pagesize, offset]);
+    res.json({
+        status: true,
+        msg: "获取成功",
+        ...results[1][0],
+        data: results[0]
+    });
 });
 
 

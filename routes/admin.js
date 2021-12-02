@@ -176,12 +176,15 @@ router.get('/info', async (req, res) => {
 
 /**
  * @api {post} /admin/info 编辑管理员个人资料
+ * @apiDescription 只有超级管理员才有权限修改用户角色，普通管理员无权限更改角色。
  * @apiName AdminUpdate
  * @apiGroup Admin
- *
+ * @apiPermission 超级管理员
+ * 
  * @apiParam { Number } id 管理员id.
  * @apiParam { String } username 用户名.
  * @apiParam { String } fullname 姓名.
+ * @apiParam { String } role 角色id.
  * @apiParam { String } sex 性别.
  * @apiParam { String } tel 手机号码.
  * @apiParam { String } email 邮箱地址.
@@ -191,9 +194,11 @@ router.get('/info', async (req, res) => {
  */
 
 router.post('/info', async (req, res) => {
-	let { id, username, fullname, sex, tel, email, avatar } = req.body;
-	let sql = 'UPDATE admin SET username = ?,fullname = ?,sex = ?,tel = ?,email = ?, avatar = ? WHERE id = ?';
-	let { affectedRows } = await db.query(sql, [username, fullname, sex, tel, email, avatar, id]);
+	let { id, username, fullname, role, sex, tel, email, avatar } = req.body;
+	let sql = `UPDATE admin SET username = ?,fullname = ?,sex = ?,tel = ?,email = ?, avatar = ? WHERE id = ?;
+	UPDATE admin_role SET role_id = ? WHERE admin_id = ?`;
+	let [{ affectedRows }] = await db.query(sql, [username, fullname, sex, tel, email, avatar, id, role,
+		id]);
 	if (!affectedRows) {
 		res.json({
 			status: false,
@@ -208,18 +213,53 @@ router.post('/info', async (req, res) => {
 });
 
 /**
- * @api {post} /admin/delete 删除账户
- * @apiName AdminDelete
+ * @api { post } /admin/account 修改本账户信息
+ * @apiDescription 管理员自行修改本账户信息，但是无权限分配角色。
+ * @apiName UpdateAccount
+ * @apiGroup Admin
+ * @apiPermission admin
+ * 
+ * @apiParam { String } username 用户名.
+ * @apiParam { String } fullname 姓名.
+ * @apiParam { String } sex 性别.
+ * @apiParam { String } tel 手机号码.
+ * @apiParam { String } email 邮箱地址.
+ * @apiParam { String } avatar 头像地址.
+ *
+ * @apiSampleRequest /admin/account
+ */
+ router.post("/account/", function (req, res) {
+    let { id } = req.user;
+    let { fullname, sex, avatar, tel, email } = req.body;
+    let sql = `UPDATE admin SET fullname = ?,sex = ?,avatar = ?,tel = ?,email = ? WHERE id = ?`;
+    db.query(sql, [fullname, sex, avatar, tel, email, id], function (results) {
+        if (!results.affectedRows) {
+            res.json({
+                status: false,
+                msg: "修改失败！"
+            });
+            return;
+        }
+        res.json({
+            status: true,
+            msg: "修改成功！"
+        });
+    });
+});
+
+/**
+ * @api {post} /admin/remove 删除账户
+ * @apiName AdminRemove
  * @apiGroup Admin
  *
  * @apiParam { Number } id 管理员id.
  *
- * @apiSampleRequest /admin/delete
+ * @apiSampleRequest /admin/remove
  */
-router.post('/delete', async (req, res) => {
+router.post('/remove', async (req, res) => {
 	let { id } = req.body;
-	let sql = 'DELETE FROM admin WHERE id = ?';
-	let { affectedRows } = await db.query(sql, [id]);
+	let sql = 'DELETE FROM admin WHERE id = ?;DELETE FROM admin_role WHERE admin_id = ?';
+	let [{ affectedRows }] = await db.query(sql, [id, id]);
 	if (!affectedRows) {
 		res.json({
 			status: false,
@@ -242,7 +282,7 @@ router.post('/delete', async (req, res) => {
  */
 
 router.get('/list', async (req, res) => {
-	var sql = 'SELECT id, username, fullname, sex, tel, email, avatar FROM admin';
+	var sql = 'SELECT a.id,a.username,a.fullname,a.sex,a.email,a.avatar,a.tel,r.role_name,r.id AS role FROM ADMIN AS a LEFT JOIN admin_role AS ar ON a.id = ar.admin_id LEFT JOIN role AS r ON r.id = ar.role_id;'
 	let results = await db.query(sql);
 	res.json({
 		status: true,
