@@ -35,7 +35,7 @@ app.use(cors())
 // 使用中间件验证token合法性
 // 除了这些地址，其他的URL都需要验证
 app.use(expressJwt({ secret: 'secret' }).unless({
-  path: ['/', '/admin/register', '/admin/login']
+  path: ['/', '/admin/register', '/admin/login', '/article/list', '/article/detail']
 }))
 
 app.use('/', indexRouter)
