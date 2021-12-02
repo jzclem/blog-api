@@ -3,7 +3,7 @@ var pool = mysql.createPool({
 	host: 'localhost',
 	user: 'root',
 	password: '123456',
-	database: 'blog',
+	database: 'cms',
 	multipleStatements: true,
 	// debug: true,
 });
