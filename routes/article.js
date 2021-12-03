@@ -20,7 +20,7 @@ var db = require('../config/mysql');
 
 router.post("/release/", async (req, res) => {
     let { cate_1st, cate_2nd, title, description, content, main_photo } = req.body;
-    var sql = 'INSERT INTO article (cate_1st ,cate_2nd , title , description , content , create_date , main_photo ) VALUES (?, ? , ? , ?, ?, CURRENT_TIMESTAMP() , ?)';
+    var sql = 'INSERT INTO article (cate_1st ,cate_2nd , title , description , content , create_date , update_date , main_photo ) VALUES (?, ? , ? , ?, ?, CURRENT_TIMESTAMP() , CURRENT_TIMESTAMP() , ?)';
     let { insertId, affectedRows } = await db.query(sql, [cate_1st, cate_2nd, title, description, content, main_photo]);
     if (!affectedRows) {
         res.json({
