@@ -57,7 +57,7 @@ router.post("/editor", upload.single('file'), async function (req, res) {
 		res.json({
 			errno: 0,
 			msg: "图片上传处理成功!",
-			data: ['http://api.raner.top' + fileFolder + filename + '.' + format],
+			data: ['https://api.raner.top' + fileFolder + filename + '.' + format],
 		});
 	} catch (error) {
 		res.json({
@@ -124,7 +124,7 @@ router.post("/common", upload.single('file'), async function (req, res) {
 		res.json({
 			status: true,
 			msg: "图片上传处理成功!",
-			src: 'http://api.raner.top' + fileFolder + filename + '.' + format
+			src: 'https://api.raner.top' + fileFolder + filename + '.' + format
 		});
 	} catch (error) {
 		res.json({
