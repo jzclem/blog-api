@@ -133,8 +133,8 @@ router.get("/list", async (req, res) => {
     let { pagesize, pageindex } = req.query;
     pagesize = parseInt(pagesize);
     var offset = pagesize * (pageindex - 1);
-    var sql = 'SELECT a.id, cate_1st, cate_2nd, title, description, main_photo, DATE_FORMAT(create_date,"%Y-%m-%d %T") AS create_time , DATE_FORMAT(update_date,"%Y-%m-%d %T") AS update_time, c1.`name` AS cate_1st_name, c2.`name` AS cate_2nd_name FROM `article` a JOIN category c1 ON a.cate_1st = c1.id JOIN category c2 ON a.cate_2nd = c2.id ORDER BY create_date DESC, update_date DESC LIMIT ? OFFSET ?;SELECT FOUND_ROWS() as total';
-    let results = await db.query(sql, [pagesize, offset]);
+    var sql = `SELECT a.id, cate_1st, cate_2nd, title, description, main_photo, DATE_FORMAT(create_date,"%Y-%m-%d %T") AS create_time , DATE_FORMAT(update_date,"%Y-%m-%d %T") AS update_time, c1.name AS cate_1st_name, c2.name AS cate_2nd_name FROM article a JOIN category c1 ON a.cate_1st = c1.id JOIN category c2 ON a.cate_2nd = c2.id ORDER BY create_date DESC, update_date DESC LIMIT ${pagesize} OFFSET ${offset};SELECT COUNT(*) AS total FROM article`;
+    let results = await db.query(sql);
     res.json({
         status: true,
         msg: "获取成功",
